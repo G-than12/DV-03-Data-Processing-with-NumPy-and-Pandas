@@ -337,3 +337,122 @@ Di notebook [Praktikum3_GathanHilabi_60324059.ipynb](file:///c:/Users/LENOVO/Doc
 | `df["survived"].mean() * 100` | Menghitung persentase keselamatan penumpang dari rata-rata nilai biner 0 dan 1 (41.05% pada Latihan 5). |
 
 ---
+
+## 4. Bagian III: Perbandingan dan Integrasi NumPy vs Pandas
+
+### 4.1 Matriks Perbandingan Fitur
+
+| Kriteria | NumPy (`np`) | Pandas (`pd`) |
+| :--- | :--- | :--- |
+| **Fokus Utama** | Komputasi numerik, aljabar linier, dan manipulasi matriks cepat. | Analisis, manipulasi, dan pembersihan data tabular multi-tipe. |
+| **Struktur Inti** | `ndarray` (1D, 2D, ... ND). | `Series` (1D) dan `DataFrame` (2D). |
+| **Pelabelan Data** | Tidak berlabel (diakses via indeks angka integer murni: `0, 1, 2`). | Berlabel eksplisit (nama kolom teks dan indeks baris). |
+| **Tipe Data** | Homogen (seluruh elemen dalam satu array harus bertipe data sama). | Heterogen (tiap kolom boleh memiliki tipe data berbeda-beda). |
+| **Missing Values** | Mendukung `np.nan`, tetapi manipulasi nilai kosong memerlukan penanganan manual. | Memiliki method built-in canggih (`isna()`, `fillna()`, `dropna()`). |
+| **Performa Memori** | Paling efisien dan hemat memori. | Sedikit lebih besar overhead-nya karena menyimpan metadata indeks dan kolom. |
+
+### 4.2 Hubungan Arsitektur: Bagaimana Keduanya Bekerja Sama
+
+Pandas tidak diciptakan untuk menggantikan NumPy, melainkan **dibangun tepat di atas arsitektur NumPy**. Setiap kolom `pd.Series` di dalam DataFrame sebenarnya membungkus sebuah `np.ndarray` di dalamnya.
+
+```text
++-------------------------------------------------------+
+|                   Pandas DataFrame                    |
+|  [Header Kolom: 'age', 'fare', 'sex', ...]            |
+|  [Index Baris:  0, 1, 2, 3, 4, ...]                   |
++-------------------------------------------------------+
+                           |
+                           v  tersusun dari
++-------------------------------------------------------+
+|                     Pandas Series                     |
+|  Nilai Kolom: [22.0, 38.0, 26.0, 35.0, ...]           |
++-------------------------------------------------------+
+                           |
+                           v  menggunakan penyimpanan
++-------------------------------------------------------+
+|               NumPy ndarray (C-Engine)                |
+|  Tipe C-Contiguous: float64 [0x7f8a12...]             |
++-------------------------------------------------------+
+```
+
+Contoh bukti integrasi pada praktikum:
+1. **Mengirim Series ke Fungsi NumPy:**
+   ```python
+   # NumPy langsung mengekstrak array di balik Series Pandas
+   rata_rata = np.mean(df["age"])
+   ```
+2. **Mengekstrak NumPy Array dari Pandas:**
+   ```python
+   # Mengonversi DataFrame / Series ke array NumPy murni
+   vektor_nilai = df["age"].to_numpy()
+   print(type(vektor_nilai))  # <class 'numpy.ndarray'>
+   ```
+
+### 4.3 Kapan Menggunakan NumPy vs Pandas?
+
+```mermaid
+flowchart TD
+    Start["Apa jenis data yang sedang Anda olah?"] --> Q1{"Apakah datanya tabular (baris x kolom berlabel) dengan beragam tipe data?"}
+    Q1 -- "Ya (CSV, Excel, Database, JSON)" --> UsePandas["Gunakan PANDAS\n(pd.read_csv, DataFrame, cleaning, filtering)"]
+    Q1 -- "Tidak (Matriks angka murni, citra/gambar, audio, tensor sinyal)" --> UseNumPy["Gunakan NUMPY\n(np.ndarray, aljabar linier, konvolusi)"]
+    UsePandas --> Next{"Perlu operasi matematika / agregasi khusus?"}
+    Next -- "Ya" --> Combine["Kombinasikan Keduanya!\nContoh: np.mean(df['col']), np.where(df['col'] > 0, 1, 0)"]
+```
+
+---
+
+## 5. Bagian IV: Cheatsheet Sintaks Cepat (Quick Reference)
+
+### 📌 Cheatsheet NumPy
+
+| Kebutuhan | Perintah Sintaks | Contoh Penggunaan |
+| :--- | :--- | :--- |
+| Import Library | `import numpy as np` | `import numpy as np` |
+| Buat Array 1D | `np.array(list)` | `np.array([1, 2, 3])` |
+| Buat Array Nol | `np.zeros(shape)` | `np.zeros((3, 3))` |
+| Buat Deret Terurut | `np.arange(start, stop, step)` | `np.arange(0, 10, 2)` |
+| Rata-rata (*Mean*) | `np.mean(arr)` | `np.mean(nilai)` |
+| Median | `np.median(arr)` | `np.median(nilai)` |
+| Standar Deviasi | `np.std(arr)` | `np.std(nilai)` |
+| Nilai Min / Max | `np.min(arr)` / `np.max(arr)` | `np.min(nilai)` |
+| Jumlah Total | `np.sum(arr)` | `np.sum(nilai)` |
+| Cek Kesamaan Desimal | `np.isclose(a, b)` | `np.isclose(x, y)` |
+| Pengkondisian Cepat | `np.where(kondisi, jika_benar, jika_salah)` | `np.where(arr > 70, "Lulus", "Remedial")` |
+
+---
+
+### 📌 Cheatsheet Pandas
+
+| Kebutuhan | Perintah Sintaks | Contoh Penggunaan |
+| :--- | :--- | :--- |
+| Import Library | `import pandas as pd` | `import pandas as pd` |
+| Baca File CSV | `pd.read_csv(filepath)` | `df = pd.read_csv("titanic.csv")` |
+| Simpan ke CSV | `df.to_csv(filepath, index=False)` | `df.to_csv("clean.csv", index=False)` |
+| Tinjau Baris Awal | `df.head(n)` | `df.head(5)` |
+| Tinjau Baris Akhir | `df.tail(n)` | `df.tail(5)` |
+| Dimensi Baris & Kolom | `df.shape` | `df.shape` *(mengembalikan tuple)* |
+| Daftar Nama Kolom | `df.columns` | `df.columns` |
+| Ringkasan Metadata | `df.info()` | `df.info()` |
+| Statistik Deskriptif | `df.describe()` | `df.describe()` |
+| Pilih 1 Kolom | `df["nama_kolom"]` | `df["age"]` |
+| Pilih Banyak Kolom | `df[["kolom1", "kolom2"]]` | `df[["age", "fare"]]` |
+| Filter Baris Tunggal | `df[kondisi]` | `df[df["age"] < 18]` |
+| Filter Baris Ganda AND | `df[(kondisi1) & (kondisi2)]` | `df[(df["pclass"] == 1) & (df["survived"] == 1)]` |
+| Hitung Nilai Kosong | `df.isnull().sum()` | `df.isnull().sum()` |
+| Hapus Baris Kosong | `df.dropna(subset=[...])` | `df.dropna(subset=["embarked"])` |
+| Isi Nilai Kosong (Imputasi) | `df[col].fillna(nilai)` | `df["age"].fillna(df["age"].mean())` |
+| Cari Modus Kategori | `df[col].mode()[0]` | `df["embarked"].mode()[0]` |
+| Hitung Baris Duplikat | `df.duplicated().sum()` | `df.duplicated().sum()` |
+| Hapus Baris Duplikat | `df.drop_duplicates()` | `df = df.drop_duplicates()` |
+| Rata-rata Kolom | `df[col].mean()` | `df["age"].mean()` |
+| Total Kolom | `df[col].sum()` | `df["survived"].sum()` |
+
+---
+
+## 6. Referensi Resmi
+
+Untuk eksplorasi sintaks lebih mendalam, silakan merujuk pada dokumentasi resmi berikut:
+- **NumPy Documentation:** [https://numpy.org/doc/stable/](https://numpy.org/doc/stable/)
+- **NumPy Absolute Beginners Guide:** [https://numpy.org/doc/stable/user/absolute_beginners.html](https://numpy.org/doc/stable/user/absolute_beginners.html)
+- **Pandas Documentation:** [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/)
+- **Pandas 10 Minutes to pandas:** [https://pandas.pydata.org/docs/user_guide/10min.html](https://pandas.pydata.org/docs/user_guide/10min.html)
