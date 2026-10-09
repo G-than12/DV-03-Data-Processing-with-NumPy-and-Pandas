@@ -28,9 +28,12 @@ Repositori ini berisi pengerjaan **Tugas Praktikum 2 - Pertemuan 3** pada mata k
 ```text
 DV-03-Data-Processing-with-NumPy-and-Pandas/
 ├── Praktikum3_GathanHilabi_60324059.ipynb   # Notebook utama praktikum (lengkap dengan output)
+├── PANDUAN_NUMPY_PANDAS.md                 # Panduan komprehensif & cheatsheet NumPy dan Pandas
 ├── titanic_bersih.csv                      # Dataset hasil pembersihan (clean data)
 └── README.md                               # Dokumentasi lengkap repositori
 ```
+
+> 📖 **Panduan Pembelajaran:** Untuk penjelasan mendalam mengenai konsep, arsitektur, perbedaan, serta cheatsheet sintaks lengkap NumPy dan Pandas, silakan pelajari dokumen [PANDUAN_NUMPY_PANDAS.md](PANDUAN_NUMPY_PANDAS.md).
 
 ---
 
