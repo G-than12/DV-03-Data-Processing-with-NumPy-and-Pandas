@@ -183,3 +183,157 @@ print("Apakah hasilnya sama? :", np.isclose(mean_numpy, mean_pandas))
 - **`np.isclose(...)`**: Memvalidasi kesamaan hasil kalkulasi kedua pustaka secara aman terhadap presisi desimal biner komputer.
 
 ---
+
+## 3. Bagian II: Panduan Lengkap Pandas
+
+**Pandas** (*Python Data Analysis Library*) adalah pustaka paling populer untuk memanipulasi, menyusun, dan membersihkan data berbentuk tabel (*tabular data*).
+
+```python
+import pandas as pd
+```
+> **Konvensi Standar:** Selalu gunakan alias `pd` saat mengimpor Pandas.
+
+### 3.1 Filosofi dan Konsep Dasar Pandas
+
+Jika NumPy berfokus pada matriks angka tanpa label, **Pandas memberikan konteks semantik**:
+- Baris memiliki nomor baris / label waktu (*Index*).
+- Kolom memiliki label nama atribut (*Column Names*).
+- Setiap kolom dapat memiliki tipe data yang berbeda (misalnya: kolom nama bertipe teks, umur bertipe numerik, dan status bertipe boolean).
+
+### 3.2 Struktur Data: Series vs DataFrame
+
+```mermaid
+classDiagram
+    class DataFrame {
+        +Index baris (0, 1, 2, ...)
+        +Header kolom ('age', 'sex', 'fare', ...)
+        +2-Dimensi (Tabel Baris x Kolom)
+    }
+    class Series {
+        +Index baris (0, 1, 2, ...)
+        +1-Dimensi (Satu Kolom Data)
+        +Nama Kolom ('age')
+    }
+    DataFrame "1" *-- "many" Series : Terdiri dari kumpulan
+```
+
+1. **`pd.Series` (1-Dimensi):**
+   - Satu kolom tunggal data yang dilengkapi dengan indeks.
+   - Contoh: saat kita mengeksekusi `df["age"]`, hasilnya adalah objek `Series`.
+2. **`pd.DataFrame` (2-Dimensi):**
+   - Lembar kerja tabel penuh yang tersusun atas kumpulan `Series` yang berbagi satu indeks baris yang sama.
+
+### 3.3 Input & Output Data Tabular
+
+Pandas mempermudah transfer data dari berbagai format file:
+
+```python
+# Membaca data dari CSV lokal atau tautan URL
+df = pd.read_csv("data.csv")
+df = pd.read_csv("https://contoh.com/data.csv")
+
+# Menyimpan kembali hasil pengolahan data ke CSV
+# Parameter index=False penting agar kolom indeks angka tidak menjadi kolom baru
+df.to_csv("hasil_bersih.csv", index=False)
+```
+
+### 3.4 Eksplorasi Awal Data (EDA Fundamentals)
+
+Sebelum melakukan analisis atau pemodelan apa pun, empat inspeksi awal wajib dijalankan:
+
+1. **`df.head(n)` & `df.tail(n)`**
+   - Memeriksa sampel baris awal dan akhir data untuk verifikasi visual cepat format kolom.
+2. **`df.shape`**
+   - Tuple ukuran `(jumlah_baris, jumlah_kolom)`. Tidak menggunakan tanda kurung karena merupakan atribut, bukan fungsi.
+3. **`df.info()`**
+   - Menampilkan gambaran teknis menyeluruh: total baris, jumlah nilai non-null per kolom, tipe data masing-masing kolom (`Dtype`), dan penggunaan memori.
+4. **`df.describe()`**
+   - Menghasilkan ringkasan statistik deskriptif untuk kolom numerik: `count` (jumlah terisi), `mean` (rata-rata), `std` (deviasi standar), `min`, persentil `25%` (Q1), `50%` (median/Q2), `75%` (Q3), dan `max`.
+
+### 3.5 Akses Kolom, Baris, dan Boolean Indexing
+
+#### Memilih Kolom:
+```python
+# 1 Kolom -> Mengembalikan objek Series
+usia = df["age"]
+
+# Beberapa Kolom -> Mengembalikan objek DataFrame baru (gunakan kurung siku ganda [[]])
+profil = df[["age", "sex", "fare"]]
+```
+
+#### Boolean Indexing (Filtering Baris):
+Filtering di Pandas dilakukan dengan memberikan kondisi boolean di dalam kurung siku `df[...]`:
+
+```python
+# Kondisi tunggal: Penumpang di bawah 18 tahun
+anak = df[df["age"] < 18]
+
+# Kondisi ganda AND (&): Penumpang Kelas 1 DAN Selamat
+kelas1_selamat = df[(df["pclass"] == 1) & (df["survived"] == 1)]
+
+# Kondisi ganda OR (|): Penumpang Kelas 1 ATAU Penumpang yang Selamat
+kelas1_atau_selamat = df[(df["pclass"] == 1) | (df["survived"] == 1)]
+```
+
+> [!IMPORTANT]
+> **Aturan Operator Logika di Pandas:**
+> - Di Pandas, wajib gunakan **`&`** (AND), **`|`** (OR), dan **`~`** (NOT), bukan kata kunci Python `and`, `or`, `not`.
+> - Setiap ekspresi kondisi **wajib diapit tanda kurung biasa `(...)`** karena derajat prioritas operator bitwise lebih tinggi daripada operator perbandingan (`==`, `<`, `>`).
+
+### 3.6 Pembersihan Data: Missing Value
+
+Nilai kosong di Pandas diwakili oleh `NaN` (*Not a Number*) atau `None`.
+
+```python
+# 1. Mendeteksi jumlah nilai kosong per kolom
+df.isnull().sum()     # atau df.isna().sum()
+
+# 2. Strategi Imputasi (Mengisi nilai kosong)
+# Mengisi dengan rata-rata (mean)
+df["age"] = df["age"].fillna(df["age"].mean())
+
+# Mengisi dengan modus (nilai terbanyak untuk kolom kategorikal)
+modus = df["embarked"].mode()[0]
+df["embarked"] = df["embarked"].fillna(modus)
+
+# 3. Strategi Eliminasi (Menghapus baris yang kosong)
+df_bersih = df.dropna(subset=["embarked"])
+```
+
+### 3.7 Pembersihan Data: Duplikasi Baris
+
+Baris yang identik dapat mengacaukan hasil perhitungan agregasi dan statistik:
+
+```python
+# Menghitung berapa baris data yang duplikat
+jumlah_duplikat = df.duplicated().sum()
+
+# Menghapus seluruh baris duplikat dan menyisakan entri unik pertama
+df = df.drop_duplicates()
+```
+
+### 3.8 Bedah Kode Pandas pada Praktikum 3
+
+Di notebook [Praktikum3_GathanHilabi_60324059.ipynb](file:///c:/Users/LENOVO/Documents/PERSONAL%20GATHAN/PROJECT%202026/VISUALISASI%20DATA/VD_03/Praktikum3_GathanHilabi_60324059.ipynb), sintaks Pandas digunakan secara intensif:
+
+| Kode Praktikum | Penjelasan Operasional |
+| :--- | :--- |
+| `pd.read_csv(url)` | Mengunduh data Titanic secara dinamis dari tautan GitHub publik seaborn-data ke memori komputer dalam bentuk tabel DataFrame. |
+| `df.head()` | Menginspeksi 5 baris pertama untuk memahami kolom seperti `survived`, `pclass`, `sex`, `age`, dll. |
+| `df.shape` | Memeriksa ukuran awal dataset (891 baris, 15 kolom). |
+| `df.info()` | Menemukan kolom mana yang bertipe data numerik dan kolom mana yang memiliki nilai null (`age`, `deck`, `embarked`). |
+| `df.describe()` | Mengetahui ringkasan persebaran biaya tiket (`fare`) dan rata-rata usia penumpang (~29.7 tahun). |
+| `df["age"]` | Mengakses kolom umur sebagai `pd.Series`. |
+| `df[["age", "sex", "survived"]]` | Mengambil irisan (*subset*) data hanya pada 3 kolom tersebut untuk analisis demografi. |
+| `df[df["age"] < 18]` | Menyaring baris penumpang anak-anak (ditemukan 113 penumpang). |
+| `df.isnull().sum()` | Mendeteksi 177 missing value pada `age`, 2 pada `embarked`, dan 688 pada `deck`. |
+| `df["age"].fillna(df["age"].mean())` | Melakukan imputasi statistik pada usia kosong menggunakan rata-rata usia yang ada. |
+| `df.dropna(subset=["embarked"])` | Menghapus 2 baris yang tidak memiliki informasi pelabuhan keberangkatan (*embarked*). |
+| `df.drop_duplicates()` | Menghapus 107 baris duplikat sehingga total baris berkurang dari 889 menjadi 782 baris. |
+| `df.to_csv("titanic_bersih.csv", index=False)` | Mengekspor dataset yang sudah siap pakai ke media penyimpanan lokal. |
+| `df.tail(5)` | Menampilkan 5 baris terakhir dataset (Latihan 1). |
+| `df[(df["pclass"] == 1) & (df["survived"] == 1)]` | Memfilter penumpang VIP Kelas 1 yang selamat (133 orang pada Latihan 3). |
+| `df_latihan["embarked"].mode()[0]` | Mengambil nilai modus (`'S'` / Southampton) untuk pengisian missing value kategorikal (Latihan 4). |
+| `df["survived"].mean() * 100` | Menghitung persentase keselamatan penumpang dari rata-rata nilai biner 0 dan 1 (41.05% pada Latihan 5). |
+
+---
